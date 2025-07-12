@@ -1,0 +1,148 @@
+## these are my notes for installing and upgrading Mastodon
+
+## Mastodon upgrade
+database migration error
+RAILS_ENV=production bundle exec rails db:migrate
+
+#get newest build
+git fetch
+git pull
+bundle install
+RAILS_ENV=production bundle exec rails assets:clobber yarn:install assets:precompile db:migrate
+#RAILS_ENV=production bin/tootctl search deploy --reset-chewy
+#RAILS_ENV=production bin/tootctl search deploy --only=accounts statuses public_statuses
+#RAILS_ENV=production bin/tootctl search deploy --only-mapping --only=accounts
+exit
+
+service mastodon-sidekiq restart && service mastodon-streaming restart && service mastodon-web restart
+
+#RAILS_ENV=production bin/tootctl search deploy
+
+
+
+
+#rails upgrade
+cd ~/.rbenv
+git pull
+src/configure && make -C src
+git -C ~/.rbenv/plugins/ruby-build pull
+RUBY_CONFIGURE_OPTS=--with-jemalloc rbenv install 3.4.4
+rbenv global 3.4.4
+cd ~/live
+git pull
+bundle install
+RAILS_ENV=production bundle exec rails assets:clobber yarn:install assets:precompile db:migrate
+
+
+#node.js upgrade
+npm install n -g  #installs the utilility called n
+n stable  #install the newest stable release
+n latest   #install the lastest release
+
+chmod a+x /home/mastodon/
+ mastodon_production
+ RAILS_ENV=production bundle exec rails assets:precompile
+
+
+apt install ruby-railties
+export NODE_OPTIONS=--openssl-legacy-provider
+
+
+sudo su -
+apt install -y curl wget gnupg apt-transport-https lsb-release ca-certificates
+
+#curl -sL https://deb.nodesource.com/setup_20.x | bash -
+sudo mkdir -p /etc/apt/keyrings
+curl -fsSL https://deb.nodesource.com/gpgkey/nodesource-repo.gpg.key | sudo gpg --dearmor -o /etc/apt/keyrings/nodesource.gpg
+NODE_MAJOR=20
+echo "deb [signed-by=/etc/apt/keyrings/nodesource.gpg] https://deb.nodesource.com/node_$NODE_MAJOR.x nodistro main" | sudo tee /etc/apt/sources.list.d/nodesource.list
+sudo apt-get update
+sudo apt-get install -y nodejs
+sudo apt-get install gcc g++ make
+     curl -sL https://dl.yarnpkg.com/debian/pubkey.gpg | gpg --dearmor | sudo tee /usr/share/keyrings/yarnkey.gpg >/dev/null
+     echo "deb [signed-by=/usr/share/keyrings/yarnkey.gpg] https://dl.yarnpkg.com/debian stable main" | sudo tee /etc/apt/sources.list.d/yarn.list
+     sudo apt-get update && sudo apt-get install yarn
+
+wget -O /usr/share/keyrings/postgresql.asc https://www.postgresql.org/media/keys/ACCC4CF8.asc
+echo "deb [signed-by=/usr/share/keyrings/postgresql.asc] http://apt.postgresql.org/pub/repos/apt $(lsb_release -cs)-pgdg main" > /etc/apt/sources.list.d/postgresql.list
+
+apt update
+apt install -y \
+  imagemagick ffmpeg libpq-dev libxml2-dev libxslt1-dev file git-core \
+  g++ libprotobuf-dev protobuf-compiler pkg-config nodejs gcc autoconf \
+  bison build-essential libssl-dev libyaml-dev libreadline6-dev \
+  zlib1g-dev libncurses5-dev libffi-dev libgdbm-dev \
+  nginx redis-server redis-tools postgresql postgresql-contrib \
+  certbot python3-certbot-nginx libidn11-dev libicu-dev libjemalloc-dev libvips \
+  node-corepack
+
+sudo apt-get install libvips
+
+
+corepack enable
+yarn set version classic
+
+adduser --disabled-login mastodon
+
+su - mastodon
+
+git clone https://github.com/rbenv/rbenv.git ~/.rbenv
+cd ~/.rbenv && src/configure && make -C src
+echo 'export PATH="$HOME/.rbenv/bin:$PATH"' >> ~/.bashrc
+echo 'eval "$(rbenv init -)"' >> ~/.bashrc
+exec bash
+git clone https://github.com/rbenv/ruby-build.git ~/.rbenv/plugins/ruby-build
+
+RUBY_CONFIGURE_OPTS=--with-jemalloc rbenv install 3.4.4
+rbenv global 3.4.4
+
+gem install bundler --no-document
+exit
+
+sudo -u postgres psql
+CREATE USER mastodon CREATEDB;
+\q
+
+su - mastodon
+
+git clone https://github.com/mastodon/mastodon.git live && cd live
+
+bundle config deployment 'true'
+bundle config without 'development test'
+bundle install -j$(getconf _NPROCESSORS_ONLN)
+yarn install 
+
+#export NODE_OPTIONS=--openssl-legacy-provider
+RAILS_ENV=production bundle exec rake mastodon:setup
+
+exit
+
+cp /home/mastodon/live/dist/nginx.conf /etc/nginx/sites-available/mastodon
+ln -s /etc/nginx/sites-available/mastodon /etc/nginx/sites-enabled/mastodon
+
+
+  ssl_certificate     /etc/letsencrypt/live/example.com/fullchain.pem;
+  ssl_certificate_key /etc/letsencrypt/live/example.com/privkey.pem;
+
+certbot --nginx -d example.com
+
+
+openssl req -x509 -newkey ec -pkeyopt ec_paramgen_curve:secp384r1 -days 3650 \
+  -nodes -keyout privkey.pem -out fullchain.pem -subj "/CN=<domain>" \
+  -addext "subjectAltName=DNS:<domain>,DNS:*.<domain>"
+
+sudo nano /etc/nginx/sites-available/mastodon
+
+systemctl reload nginx
+
+cp /home/mastodon/live/dist/mastodon-*.service /etc/systemd/system/
+systemctl daemon-reload
+systemctl enable --now mastodon-web mastodon-sidekiq mastodon-streaming
+
+chmod a+x /home/mastodon/
+
+
+translation setup
+https://sleeplessbeastie.eu/2022/11/17/how-to-use-libretranslate-with-mastodon/#:~:text=Update%20Mastodon%20configuration%20to%20allow%20requests%20to%20localhost%20and%20define%20LibreTranslate%20endpoint.&text=Restart%20mastodon%2Dweb%20service.&text=You%20should%20see%20Translate%20link,That%20is%20all.
+
+
