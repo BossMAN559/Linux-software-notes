@@ -26,8 +26,8 @@ cd ~/.rbenv
 git pull
 src/configure && make -C src
 git -C ~/.rbenv/plugins/ruby-build pull
-RUBY_CONFIGURE_OPTS=--with-jemalloc rbenv install 3.4.4
-rbenv global 3.4.4
+RUBY_CONFIGURE_OPTS=--with-jemalloc rbenv install 3.4.5
+rbenv global 3.4.5
 cd ~/live
 git pull
 bundle install
@@ -93,8 +93,8 @@ echo 'eval "$(rbenv init -)"' >> ~/.bashrc
 exec bash
 git clone https://github.com/rbenv/ruby-build.git ~/.rbenv/plugins/ruby-build
 
-RUBY_CONFIGURE_OPTS=--with-jemalloc rbenv install 3.4.4
-rbenv global 3.4.4
+RUBY_CONFIGURE_OPTS=--with-jemalloc rbenv install 3.4.5
+rbenv global 3.4.5
 
 gem install bundler --no-document
 exit
